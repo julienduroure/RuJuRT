@@ -2,6 +2,7 @@
 slug: 01-getting-started
 title: Getting Started
 page: True
+menu: [book]
 ---
 
 # Installation (linux)
