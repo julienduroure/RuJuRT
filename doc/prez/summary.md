@@ -1,0 +1,5 @@
+---
+presentations:
+- prez:
+  directory: book
+---

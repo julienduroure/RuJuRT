@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% macro display_node(node) %}
+{% if node['first_level'] == False %}
+<li><a href="{{node['chapter_url']}}">{{node['chapter_title']}}</a>
+{% endif %}
+<ol>
+{% for child in node['children'] %}
+	{% if child['typ'] == 'dir' %}
+		{{ display_node(child) }}
+	{% else %}
+	<li>
+	<a href="{{child['url']}}">{{child['title']}}</a>
+	</li>
+	{% endif %}
+{% endfor %}
+</ol>
+{% if node['first_level'] == False %}
+</li>
+{% endif %}
+{% endmacro %}
+
+{% block additional_scripts %}
+{% if page.display['toc'] == True %}
+<link rel="stylesheet" href="{{ page.toc_css }}">
+{% endif %}
+{% endblock %}
+
+{% block title %}
+{{page.title}}
+{% endblock %}
+
+{% block body %}
+
+{% if page.display['cucumber'] == True %}
+{% include 'includes/cucumber.html' %}
+{% endif %}
+
+<!-- Header -->
+<header class="w3-container w3-center w3-padding-32">
+  <h1><b>{{page.title}}</b></h1>
+</header>
+
+<!-- w3-content defines a container for fixed size centered content,
+and is wrapped around the whole page content, except for the footer -->
+<div class="w3-content" style="max-width:1400px">
+
+<!-- Grid -->
+<div class="w3-row">
+
+<div class="w3-col l8 s12">
+{{page.content}}
+
+{% if page.display['toc'] == True %}
+<div class='toc'>
+{{display_node(page.toc)}}
+</div>
+{% endif %}
+
+</div>
+
+<!--  sidebar -->
+<div class="w3-col l4">
+{% include 'includes/sidebar.html' %}
+</div>
+
+</div>
+
+</div>
+
+{% endblock %}
