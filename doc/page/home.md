@@ -8,4 +8,5 @@ menu: [main]
 
 # RuJuRT
 
-WIP :)
+This site is still a WIP :)  
+If you come back later, you may will find some raytracing done in Rust.
