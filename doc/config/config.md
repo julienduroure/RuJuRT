@@ -1,6 +1,6 @@
 ---
-yasifipo_server: example.yasifipo.net
-yasifipo_resource_server: ['example-resource.yasifipo.net', 'example2-resource.yasifipo.net']
+yasifipo_server: rujurt.multiju.net
+yasifipo_resource_server: []
 yasifipo_subdirectory: '' # without any /, or '' for using root
 
 prez_url_prefix: '' # 'slug' without any /
@@ -24,6 +24,7 @@ site_version: 0.0.1
 dont_freeze: False
 freeze_dir: ../docs
 freeze_destination_ignore: []
+freeze_copy_dir: []
 
 default:
   display_sidebar: True
