@@ -23,7 +23,7 @@ layout_collection: 'collection/collection.html'
 site_version: 0.0.1
 dont_freeze: False
 freeze_dir: ../docs
-freeze_destination_ignore: []
+freeze_destination_ignore: [/CNAME]
 freeze_copy_dir: []
 
 default:
