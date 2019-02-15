@@ -1,0 +1,423 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<html>
+	<head>
+		<title>
+Common Programming Concepts
+</title>
+		
+
+		<link rel="stylesheet" href="../../static/css/cucumber.css">
+		<link rel="stylesheet" href="../../static/css/yasifipo.css">
+		<link rel="shortcut icon" href="../../static/favicon.ico">
+	</head>
+
+	<body class="w3-light-grey">
+		
+		
+
+
+
+
+<!-- Header -->
+<header class="w3-container w3-center w3-padding-32">
+  <h1><b>Common Programming Concepts</b></h1>
+</header>
+
+<!-- w3-content defines a container for fixed size centered content,
+and is wrapped around the whole page content, except for the footer -->
+<div class="w3-content" style="max-width:1400px">
+
+<!-- Grid -->
+<div class="w3-row">
+
+<div class="w3-col l8 s12">
+<h1>Mutability</h1>
+<ul>
+<li>
+<p>By default, variables are immutables</p>
+</li>
+<li>
+<p>Define a variable immutable / mutable</p>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+let x = 5 ;<br />
+let mut y = 6 ;<br />
+</pre></p>
+</blockquote>
+<h1>Constant</h1>
+<ul>
+<li>defined with <em>const</em></li>
+<li>type must be specified</li>
+<li>can be declared in any scope</li>
+<li>can only be set by a constant expression, can't be defined as result of function or with value defined only at runtime</li>
+</ul>
+<blockquote>
+<p>const MAX_POINTS: u32 = 10_000 ;</p>
+</blockquote>
+<p>( _ can be used as visual separator)</p>
+<h1>Shadowing</h1>
+<ul>
+<li>Can shadow a variable by declaring a variable with same name</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main  {
+  let x = 5 ;
+  let x = x + 1 ;
+}</pre></p>
+</blockquote>
+<ul>
+<li>Not the same as using mut, because x is still immutable</li>
+<li>We can change the type of x with the new variable</li>
+</ul>
+<h1>Data types</h1>
+<ul>
+<li>Two data type subset: scalar and compound</li>
+<li>
+<p>Define with type</p>
+<blockquote>
+<p>let guess: u32 = "42".parse().expect("Not a Number");</p>
+</blockquote>
+</li>
+<li>
+<p>Scalar: integers</p>
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="center">Length</th>
+<th align="center">Signed</th>
+<th align="center">Unsigned</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">8-bits</td>
+<td align="center">i8</td>
+<td align="center">u8</td>
+</tr>
+<tr>
+<td align="center">16-bits</td>
+<td align="center">i16</td>
+<td align="center">u16</td>
+</tr>
+<tr>
+<td align="center">32-bits</td>
+<td align="center">i32</td>
+<td align="center">u32</td>
+</tr>
+<tr>
+<td align="center">64-bits</td>
+<td align="center">i64</td>
+<td align="center">u64</td>
+</tr>
+<tr>
+<td align="center">arch</td>
+<td align="center">isize</td>
+<td align="center">usize</td>
+</tr>
+</tbody>
+</table>
+<p><br/></p>
+<table>
+<thead>
+<tr>
+<th align="center">Integer literal</th>
+<th align="center">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="center">Decimal</td>
+<td align="center">98_222</td>
+</tr>
+<tr>
+<td align="center">Hex</td>
+<td align="center">0xff</td>
+</tr>
+<tr>
+<td align="center">Octal</td>
+<td align="center">0o77</td>
+</tr>
+<tr>
+<td align="center">Binary</td>
+<td align="center">0b1111_0000</td>
+</tr>
+<tr>
+<td align="center">Byte (u8 only)</td>
+<td align="center">b'A'</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>
+<p>Scalar: floating point numbers</p>
+<ul>
+<li>f32</li>
+<li>f64 (default)</li>
+</ul>
+</li>
+<li>
+<p>numeric operations</p>
+<blockquote>
+<p><pre>
+fn main() {
+  let sum = 5 + 10;
+  let sub = 95.6 - 4.3;
+  let prod = 4 * 30;
+  let div = 56.7 / 32.2;
+  let rem = 43 % 5;
+}</pre></p>
+</blockquote>
+</li>
+<li>
+<p>Scalar: boolean</p>
+<blockquote>
+<p><pre>
+fn main() {
+  let t = true;
+  let f: bool = false; // with explicit type declaration
+}</pre></p>
+</blockquote>
+</li>
+<li>
+<p>Scalar: characters
+Defined with simple quote, where strings defined with double quote</p>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  let c = 'z';
+}</pre></p>
+</blockquote>
+<ul>
+<li>Compound type: Tuple</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  let tup: (i32, f64, u8) = (500, 6.4, 1);
+  let (x, y, z) = tup; // destructure the tuple
+  let x = tup.1; // access to index of tuple, here y
+}</pre></p>
+</blockquote>
+<ul>
+<li>Compound type: Array<ul>
+<li>Every element must have same type</li>
+<li>Useful when want data allocated on the stack rather than the heap (see later)</li>
+<li>Fixed number of elements (see vector for changing nb of elements)</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  let a = [1, 2, 3, 4, 5]; // define
+  let b = a[1]; // value = 2
+  let element = a[10]; // will compile, but program runs with error
+}</pre></p>
+</blockquote>
+<h1>Functions</h1>
+<ul>
+<li>can be defined before or after they are used</li>
+</ul>
+<blockquote>
+<p><pre>
+fn another_function() {
+  println!("Another function");
+}
+</pre></p>
+</blockquote>
+<h2>Function parameters</h2>
+<ul>
+<li>type must be defined</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  another_function(5);
+}
+fn another_function(x: i32, y: f64) {
+  println!("Values are {} and {}", x, y);
+}
+</pre></p>
+</blockquote>
+<h2>Statement &amp; Expression</h2>
+<ul>
+<li>Statement: does not return a value<ul>
+<li>Example: let x = 5;  // does not return 5, but nothing</li>
+</ul>
+</li>
+<li>Expression return a value</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  let y = {
+    let x = 3 ;
+    x + 1 // no ;
+  };
+}</pre></p>
+</blockquote>
+<h2>Function with return values</h2>
+<blockquote>
+<p><pre>
+fn five() -&gt; i32 {
+  5
+}
+fn main() {
+  let x = five();
+}</pre></p>
+</blockquote>
+<h1>Comments</h1>
+<ul>
+<li>with //</li>
+<li>Documentation comments will be see later</li>
+</ul>
+<h1>Control flow</h1>
+<h2>If / else if / else</h2>
+<blockquote>
+<p><pre>
+fn main() {
+  let number = 6 ;
+  if number % 4 == 0 {
+    println!("Number is divisible by 4");
+  } else if number % 3 == 0 {
+    println!("Number is divisible by 3");
+  } else if number % 2 == 0 {
+    println!("Number is divisible by 2");
+  } else {
+    println!("Number is not divisible by 4, 3 or 2");
+  }
+}</pre></p>
+</blockquote>
+<p>Using if in let statement:<br />
+must be same type for all conditions</p>
+<blockquote>
+<p><pre>
+fn main() {
+  let condition = true;
+  let number = if condition {
+    5
+  } else {
+    6
+  };
+}</pre></p>
+</blockquote>
+<h2>Loops</h2>
+<ul>
+<li>infinite loops</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+    loop {
+      println!("loop");
+      break;
+  }
+}</pre></p>
+</blockquote>
+<ul>
+<li>conditional loops</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  let mut number = 3;
+  while number != 0 {
+    println!("{}!", number);
+    number = number - 1;
+  }
+  println("Liftoff!");
+}</pre></p>
+</blockquote>
+<ul>
+<li>Looping through a collection</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  let a = [10, 20, 30, 40, 50];
+  for element in a.iter() {
+    println!("Value is: {}", element);
+  }
+}</pre></p>
+<p><pre>
+fn main() {
+  for number in (1..4).rev() { // 1 is included, 4 is excluded
+    println!("{}", number);
+  }
+  println!("Liftoff!");
+}</p>
+</blockquote>
+</div>
+
+<!--  sidebar -->
+<div class="w3-col l4">
+<!-- Langs -->
+
+
+
+
+
+<!-- Menu -->
+
+
+<nav class="site-nav">
+	<a href="#" class="menu-icon">
+		<svg viewBox="0 0 18 15">
+			<path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+			<path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+			<path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+		</svg>
+	</a>
+
+<div class="w3-card w3-margin menu-header">
+	<div class="w3-container w3-padding w3-light-grey">
+		<h4>Book</h4>
+	</div>
+	<div class="w3-container w3-white">
+	<p>
+	
+		<a href="../index.html">Book summary</a><br/>
+	
+		<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+	
+	</p>
+	</div>
+</div>
+
+<div class="trigger">
+
+<a href="../index.html">Book summary</a><br/>
+
+<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+
+</div>
+	</nav>
+
+
+
+
+
+<!-- Labels / tags -->
+
+
+
+</div>
+
+</div>
+
+</div>
+
+
+		<!-- Footer -->
+<footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top">
+  <p>Powered by <a href="http://yasifipo.net" target="_blank">yasifipo.net</a></p>
+</footer>
+	</body>
+</html>
