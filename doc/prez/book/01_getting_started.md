@@ -25,9 +25,9 @@ menu: [book]
 # Hello World program
 
 * Code
-> fn main() {  
-> &nbsp;&nbsp;&nbsp;&nbsp;println!("Hello world!");  
->}  
+> <pre>fn main() {  
+>   println!("Hello world!");  
+>}  </pre>
 
 println! is here a macro (because of !)
 
