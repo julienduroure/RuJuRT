@@ -1,0 +1,371 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<html>
+	<head>
+		<title>
+Understanding Ownership
+</title>
+		
+
+		<link rel="stylesheet" href="../../static/css/cucumber.css">
+		<link rel="stylesheet" href="../../static/css/yasifipo.css">
+		<link rel="shortcut icon" href="../../static/favicon.ico">
+	</head>
+
+	<body class="w3-light-grey">
+		
+		
+
+
+
+
+<!-- Header -->
+<header class="w3-container w3-center w3-padding-32">
+  <h1><b>Understanding Ownership</b></h1>
+</header>
+
+<!-- w3-content defines a container for fixed size centered content,
+and is wrapped around the whole page content, except for the footer -->
+<div class="w3-content" style="max-width:1400px">
+
+<!-- Grid -->
+<div class="w3-row">
+
+<div class="w3-col l8 s12">
+<h1>Stack &amp; Heap</h1>
+<h2>Stack</h2>
+<ul>
+<li>stack is fast</li>
+<li>last in, first out</li>
+<li>all data have a known, fixed size</li>
+</ul>
+<h2>Heap</h2>
+<ul>
+<li>data with a size unknown at compile time or size that might change</li>
+<li>allocating on the heap: ask for some amount of space on memory</li>
+<li>slower than accessing data on the stack because you have to follow a pointer to get there</li>
+</ul>
+<h2>Functions</h2>
+<ul>
+<li>When calling a function, values passed into the function (including pointers to data on the heap) and function's local variables are pushed onto the stack.</li>
+<li>When the function is over, those values are popped off the stack</li>
+</ul>
+<h1>Ownership</h1>
+<ul>
+<li>Each value has a variable that's called its <em>owner</em></li>
+<li>There can only be one owner at a time</li>
+<li>When the owner goes out of scope, the value will be dropped</li>
+</ul>
+<h2>Variable scope</h2>
+<ul>
+<li>Where the variable is valid, similar to that in other programming languages</li>
+</ul>
+<h2>String type as example</h2>
+<ul>
+<li>String literal: we know the contents at compile time, so the text is hardcoded into the final executable</li>
+<li>String type is mutable, so:<ul>
+<li>Memory must be requested from the OS at runtime (done by <em>String::from</em>)</li>
+<li>We need a way of returning this memory to the OS when we're done with our String. The memory is automatically returned once the variable that owns it goes out of scope. A function <em>drop</em> is automatically vcalled</li>
+</ul>
+</li>
+</ul>
+<h2>Variables &amp; Data: Move</h2>
+<blockquote>
+<p><pre>
+let x = 5;
+let y = x;
+</pre></p>
+</blockquote>
+<ul>
+<li>This create 2 variables, both equal to 5. Integers are simple values, pushed onto the stack</li>
+</ul>
+<blockquote>
+<p><pre>
+let s1 = String::from("hello");
+let s2 = s1;
+</pre></p>
+</blockquote>
+<ul>
+<li>On the left : stored on the stack</li>
+<li>On the right: stored on the heap</li>
+</ul>
+<p><img src="../img/trpl04-02.svg" width="70%"></p>
+<blockquote>
+<p><pre>
+let s1 = String::from("hello");
+let s2 = s1;
+</pre></p>
+</blockquote>
+<ul>
+<li>Here, s1 goes out of scope, is no longer valid. s1 was moved into s2 (not a deep copy, more like shallow copy)</li>
+</ul>
+<p><img src="../img/trpl04-04.svg" width="70%"></p>
+<ul>
+<li>Rust never create automatically deep copies</li>
+</ul>
+<h2>Variables &amp; data interact: Clone</h2>
+<ul>
+<li>If we want a deep copy (not only the stack data), use <em>clone</em></li>
+</ul>
+<blockquote>
+<p><pre>
+let s1 = String::from("hello");
+let s2 = s1.clone();</p>
+</blockquote>
+<h2>Stack only data: Copy</h2>
+<blockquote>
+<p><pre>
+let x = 5;
+let y = x;
+</pre></p>
+</blockquote>
+<ul>
+<li>Here x is still valid, because integers are not on the heap, but on the stack</li>
+<li>Rust has a special annotation called the <em>Copy</em> trait that we can place on types like integers that are stored on the stack (Cf trait on §10)</li>
+<li>If a type has the <em>Copy</em> trait, an older variable is still usable after assignment</li>
+<li>Rust won't let us annotate a type with the <em>Copy</em> trait if the type, or any of its parts, has implemented the <em>Drop</em> trait.</li>
+<li>Learn about how to add the <em>Copy</em> annotation to type on Appendix C.</li>
+<li>Following types aer <em>Copy</em>:<ul>
+<li>All the integer types, (example u32)</li>
+<li>Boolean type <em>bool</em>, with values <em>true</em> and <em>false</em></li>
+<li>all floating point types, such as <em>f64</em></li>
+<li>Character type <em>char</em></li>
+<li>Tuples, if they only contain types that are also <em>Copy</em>. Example <em>(i32, i32)</em> is <em>Copy</em>, but <em>(i32, String)</em> is not.</li>
+</ul>
+</li>
+</ul>
+<h2>OwnerShip and functions</h2>
+<ul>
+<li>Works similar to assigning a value to a variable: will move or copy</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  let s = String::from("hello");
+  take_ownership(s); // s value moves into the function, s is no longer valid
+  let x = 5;
+  makes_copy(x); // i32 is Copy, so it's OK to still use x after
+} // x go out of scope here. s too. Because s value was moved, nothing special happens</p>
+<p>fn takes_ownership(some_string: String) {
+  println!("{}", some_string);
+} // some_string goes out of scope and 'drop' is called. Memory is freed</p>
+<p>fn makes_copy(some_integer: i32) {
+  println!("{}", some_integer);
+} // some_integer goes out of scope, nothing special happens
+</pre></p>
+</blockquote>
+<h2>Return values and scope</h2>
+<ul>
+<li>Returning values can also transfer ownership</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  let s1 = gives_ownership(); // give_ownership moves its return value into s1
+  let s2 = String::from("hello"); // s2 comes into scope
+  let s3 = takes_and_gives_back(s2); // s2 is moved into function, which alse moves its return value into s3
+} // s3 goes out of scope and is dropped. s2 goes out of scope but was moved, so nothing happens. s1 goes out of scope and is dropped</p>
+<p>fn gives_ownership() -&gt; String { // function will move its return value into the function that calls it
+  let some_string = String::from("hello");
+  some_string // some_string is returned and moves out to the calling function
+}</p>
+<p>fn takes_and_gives_back(a_string: String) -&gt; String {
+  a_string // is returned and moves out to the calling function
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>We can return tuple if we want to use inside the function, and reuse after. (But we will use references instead)</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  let s1 = String::from("hello");
+  let (s2, len) = calculate_length(s1);
+}</p>
+<p>fn calculate_length(s: String) -&gt; (String, usize) {
+  let length = s.len();
+  (s, length)
+}
+</pre></p>
+</blockquote>
+<h1>References and Borrowing</h1>
+<ul>
+<li>references : not mutable</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+    let s1 = String::from("hello");
+    let len = calculate_length(&amp;s1);
+    println!("The length of '{}' is {}.", s1, len);
+}</p>
+<p>fn calculate_length(s: &amp;String) -&gt; usize {
+    s.len()
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Mutable references</li>
+<li>Can have only one mutable reference in a particular scope</li>
+<li>Can not have mutable and immutable in same time. You can have, at any given given time, either:<ul>
+<li>One mutable reference, OR</li>
+<li>Any number of immutable</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+    let mut s = String::from("hello");
+    change(&amp;mut s);
+}</p>
+<p>fn change(some_string: &amp;mut String) {
+    some_string.push_str(", world");
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Dangling references : Do not</li>
+</ul>
+<blockquote>
+<p><pre>fn main() {
+    let reference_to_nothing = dangle();
+}</p>
+<p>fn dangle() -&gt; &amp;String {
+    let s = String::from("hello");
+    &amp;s
+}
+</pre></p>
+</blockquote>
+<p>That returns a reference to not existing data, but do:</p>
+<blockquote>
+<p><pre>fn no_dangle() -&gt; String {
+    let s = String::from("hello");
+    s
+}
+</pre></p>
+</blockquote>
+<p>that moves ownership</p>
+<h1>String Slices</h1>
+<ul>
+<li>Reference a contiguous sequence of elements in a collection rather that the whole collection</li>
+<li>Slice does not have ownership</li>
+<li>String slice is a <strong>reference</strong> to part of a String</li>
+</ul>
+<blockquote>
+<p><pre>let s = String::from("hello world");
+let hello = &amp;s[0..5];
+let world = &amp;s[6..11];
+</pre></p>
+</blockquote>
+<ul>
+<li>start..end : Start is included, end is excluded</li>
+<li>start..=end : Start is included, end is included too</li>
+<li>If start at 0, can omit it: <em>&amp;s[..5]</em>;</li>
+<li>If go to the end, can omit it: <em>&amp;[5..]</em>;</li>
+<li>that "string slice" is <em>&amp;str</em></li>
+</ul>
+<blockquote>
+<p><pre>fn first_word(s: &amp;String) -&gt; &amp;str {
+    let bytes = s.as_bytes();
+    for (i, &amp;item) in bytes.iter().enumerate() {
+        if item == b' ' {
+            return &amp;s[0..i];
+        }
+    }
+   &amp;s[..]
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Best practice: Using this kind of function:</li>
+</ul>
+<blockquote>
+<p><pre>
+fn first_word(s: &amp;str) -&gt; &amp;str {
+</pre></p>
+</blockquote>
+<p>Because you can call it with &amp;str and with String:</p>
+<blockquote>
+<p><pre>
+let my_string = String::from("hello world");
+let my_string_literal = "hello world";
+let word = first_word(&amp;my_string[..]);
+let word = first_word(&amp;my_string_literal[..]);
+let word = first_word(my_string_literal);
+</pre></p>
+</blockquote>
+<h1>Other slices</h1>
+<blockquote>
+<p><pre>
+let a = [1, 2, 3, 4, 5];
+let slice = &amp;a[1..3];
+</pre></p>
+</blockquote>
+</div>
+
+<!--  sidebar -->
+<div class="w3-col l4">
+<!-- Langs -->
+
+
+
+
+
+<!-- Menu -->
+
+
+<nav class="site-nav">
+	<a href="#" class="menu-icon">
+		<svg viewBox="0 0 18 15">
+			<path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+			<path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+			<path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+		</svg>
+	</a>
+
+<div class="w3-card w3-margin menu-header">
+	<div class="w3-container w3-padding w3-light-grey">
+		<h4>Book</h4>
+	</div>
+	<div class="w3-container w3-white">
+	<p>
+	
+		<a href="../index.html">Book summary</a><br/>
+	
+		<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+	
+	</p>
+	</div>
+</div>
+
+<div class="trigger">
+
+<a href="../index.html">Book summary</a><br/>
+
+<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+
+</div>
+	</nav>
+
+
+
+
+
+<!-- Labels / tags -->
+
+
+
+</div>
+
+</div>
+
+</div>
+
+
+		<!-- Footer -->
+<footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top">
+  <p>Powered by <a href="http://yasifipo.net" target="_blank">yasifipo.net</a></p>
+</footer>
+	</body>
+</html>
