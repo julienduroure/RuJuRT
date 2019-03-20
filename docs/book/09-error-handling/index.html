@@ -1,0 +1,306 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<html>
+	<head>
+		<title>
+Error handling
+</title>
+		
+
+		<link rel="stylesheet" href="../../static/css/cucumber.css">
+		<link rel="stylesheet" href="../../static/css/yasifipo.css">
+		<link rel="shortcut icon" href="../../static/favicon.ico">
+	</head>
+
+	<body class="w3-light-grey">
+		
+		
+
+
+
+
+<!-- Header -->
+<header class="w3-container w3-center w3-padding-32">
+  <h1><b>Error handling</b></h1>
+</header>
+
+<!-- w3-content defines a container for fixed size centered content,
+and is wrapped around the whole page content, except for the footer -->
+<div class="w3-content" style="max-width:1400px">
+
+<!-- Grid -->
+<div class="w3-row">
+
+<div class="w3-col l8 s12">
+<h1>Errors</h1>
+<ul>
+<li>
+<p>2 types:</p>
+<ul>
+<li>recoverable: have a type <em>Result<T, E></em></li>
+<li>unrecoverable, have <em>panic!</em> macro to stop the program</li>
+</ul>
+</li>
+<li>
+<p>No exceptions in Rust</p>
+</li>
+</ul>
+<h1>unrecoverable errors with <em>panic!</em></h1>
+<ul>
+<li>Default: <em>unwinding</em> --&gt; clean up data before ending program</li>
+<li>
+<p>Other solution --&gt; <em>abort</em> --&gt; end the program without cleaning up</p>
+</li>
+<li>
+<p>To abort on panic in releae mode, add in Cargo.toml file:</p>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+[profile.release]
+panic = 'abort'
+</pre></p>
+</blockquote>
+<ul>
+<li>Calling panic!</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  panic!("Crash &amp; burn");
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Using Backtrace</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+  let v = vec![1, 2, 3];
+  v[99];
+}
+</pre></p>
+</blockquote>
+<p>Call it with :</p>
+<blockquote>
+<p><pre>
+RUST_BACKTRACE=1 cargo run
+</pre></p>
+</blockquote>
+<p>Debug symbols are enabled by default when using cargo build or cargo run without the --release flag, as we have here</p>
+<h1>Recoverable errors with <em>Result</em></h1>
+<ul>
+<li>Result is defined as:<br />
+(T &amp; E are generic type parameters, see §10)</li>
+</ul>
+<blockquote>
+<p><pre>
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Example</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::fs::File;
+fn main() {
+    let f = File::open("hello.txt");
+    let f = match f {
+        Ok(file) =&gt; file,
+        Err(error) =&gt; {
+            panic!("There was a problem opening the file: {:?}", error)
+        },
+    };
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Matching different errors</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::fs::File;
+use std::io::ErrorKind;
+fn main() {
+    let f = File::open("hello.txt");
+    let f = match f {
+        Ok(file) =&gt; file,
+        Err(error) =&gt; match error.kind() {
+            ErrorKind::NotFound =&gt; match File::create("hello.txt") {
+                Ok(fc) =&gt; fc,
+                Err(e) =&gt; panic!("Tried to create file but there was a problem: {:?}", e),
+            },
+            other_error =&gt; panic!("There was a problem opening the file: {:?}", other_error),
+        },
+    };
+}
+</pre></p>
+</blockquote>
+<p>In chapter §13, we will talk about <em>closure</em></p>
+<blockquote>
+<p><pre>
+use std::fs::File;
+use std::io::ErrorKind;
+fn main() {
+    let f = File::open("hello.txt").map_err(|error| {
+        if error.kind() == ErrorKind::NotFound {
+            File::create("hello.txt").unwrap_or_else(|error| {
+                panic!("Tried to create file but there was a problem: {:?}", error);
+            })
+        } else {
+            panic!("There was a problem opening the file: {:?}", error);
+        }
+    });
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>
+<p>Shortcuts for panic on error: <em>unwrap</em> and <em>expect</em></p>
+<ul>
+<li>unwrap --&gt; if <em>Ok</em>, return the value inside <em>ok</em>. If <em>Err</em>, will call <em>panic!</em></li>
+<li>expect --&gt; same, but let choose an error message</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::fs::File;
+fn main() {
+    let f   = File::open("hello.txt").unwrap();
+    let f_2 = File::open("hello.txt").expect("Failed to open hello.txt");
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Propagating errors</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::io;
+use std::io::Read;
+use std::fs::File;
+fn read_username_from_file() -&gt; Result<String, io::Error> {
+    let f = File::open("hello.txt");
+    let mut f = match f {
+        Ok(file) =&gt; file,
+        Err(e) =&gt; return Err(e),
+    };
+    let mut s = String::new();
+    match f.read_to_string(&amp;mut s) {
+        Ok(_) =&gt; Ok(s),
+        Err(e) =&gt; Err(e),
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Shortcut for propagating errors : <em>?</em> operatot</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::io;
+use std::io::Read;
+use std::fs::File;
+fn read_username_from_file() -&gt; Result<String, io::Error> {
+    let mut f = File::open("hello.txt")?;
+    let mut s = String::new();
+    f.read_to_string(&amp;mut s)?;
+    Ok(s)
+}
+</pre></p>
+</blockquote>
+<p>Shorter:</p>
+<blockquote>
+<p><pre>
+use std::io;
+use std::io::Read;
+use std::fs::File;
+fn read_username_from_file() -&gt; Result<String, io::Error> {
+    let mut s = String::new();
+    File::open("hello.txt")?.read_to_string(&amp;mut s)?;
+    Ok(s)
+}
+</pre></p>
+</blockquote>
+<p>Another way:</p>
+<blockquote>
+<p><pre>
+use std::io;
+use std::fs;
+fn read_username_from_file() -&gt; Result<String, io::Error> {
+    fs::read_to_string("hello.txt")
+}
+</pre></p>
+</blockquote>
+</div>
+
+<!--  sidebar -->
+<div class="w3-col l4">
+<!-- Langs -->
+
+
+
+
+
+<!-- Menu -->
+
+
+<nav class="site-nav">
+	<a href="#" class="menu-icon">
+		<svg viewBox="0 0 18 15">
+			<path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+			<path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+			<path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+		</svg>
+	</a>
+
+<div class="w3-card w3-margin menu-header">
+	<div class="w3-container w3-padding w3-light-grey">
+		<h4>Book</h4>
+	</div>
+	<div class="w3-container w3-white">
+	<p>
+	
+		<a href="../index.html">Book summary</a><br/>
+	
+		<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+	
+	</p>
+	</div>
+</div>
+
+<div class="trigger">
+
+<a href="../index.html">Book summary</a><br/>
+
+<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+
+</div>
+	</nav>
+
+
+
+
+
+<!-- Labels / tags -->
+
+
+
+</div>
+
+</div>
+
+</div>
+
+
+		<!-- Footer -->
+<footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top">
+  <p>Powered by <a href="http://yasifipo.net" target="_blank">yasifipo.net</a></p>
+</footer>
+	</body>
+</html>

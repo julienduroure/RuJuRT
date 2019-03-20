@@ -1,0 +1,591 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<html>
+	<head>
+		<title>
+Generic type, trait and lifetime
+</title>
+		
+
+		<link rel="stylesheet" href="../../static/css/cucumber.css">
+		<link rel="stylesheet" href="../../static/css/yasifipo.css">
+		<link rel="shortcut icon" href="../../static/favicon.ico">
+	</head>
+
+	<body class="w3-light-grey">
+		
+		
+
+
+
+
+<!-- Header -->
+<header class="w3-container w3-center w3-padding-32">
+  <h1><b>Generic type, trait and lifetime</b></h1>
+</header>
+
+<!-- w3-content defines a container for fixed size centered content,
+and is wrapped around the whole page content, except for the footer -->
+<div class="w3-content" style="max-width:1400px">
+
+<!-- Grid -->
+<div class="w3-row">
+
+<div class="w3-col l8 s12">
+<h1>Generic types</h1>
+<ul>
+<li>Removing Duplication by Extracting a Function</li>
+</ul>
+<p>Replace:</p>
+<blockquote>
+<p><pre>
+fn largest_i32(list: &amp;[i32]) -&gt; i32 {
+    let mut largest = list[0];
+    for &amp;item in list.iter() {
+        if item &gt; largest {
+            largest = item;
+        }
+    }
+    largest
+}
+fn largest_char(list: &amp;[char]) -&gt; char {
+    let mut largest = list[0];
+    for &amp;item in list.iter() {
+        if item &gt; largest {
+            largest = item;
+        }
+    }
+    largest
+}
+fn main() {
+    let number_list = vec![34, 50, 25, 100, 65];
+    let result = largest_i32(&amp;number_list);
+    println!("The largest number is {}", result);
+    let char_list = vec!['y', 'm', 'a', 'q'];
+    let result = largest_char(&amp;char_list);
+    println!("The largest char is {}", result);
+}
+</pre></p>
+</blockquote>
+<p>By:</p>
+<p>Note this will not compile yet</p>
+<blockquote>
+<p><pre>
+fn largest&lt; T &gt;(list: &amp;[T]) -&gt; T {
+    let mut largest = list[0];
+    for &amp;item in list.iter() {
+        if item &gt; largest {
+            largest = item;
+        }
+    }
+    largest
+}
+fn main() {
+    let number_list = vec![34, 50, 25, 100, 65];
+    let result = largest(&amp;number_list);
+    println!("The largest number is {}", result);
+    let char_list = vec!['y', 'm', 'a', 'q'];
+    let result = largest(&amp;char_list);
+    println!("The largest char is {}", result);
+}
+</pre>  </p>
+<p></pre>
+note: an implementation of <code>std::cmp::PartialOrd</code> might be missing for <code>T</code>
+</pre></p>
+</blockquote>
+<p>std::cmp::PartialOrd is a <em>trait</em></p>
+<ul>
+<li>In struct definition</li>
+</ul>
+<blockquote>
+<p><pre>
+struct Point<T, U> {
+    x: T,
+    y: U,
+}
+fn main() {
+    let both_integer = Point { x: 5, y: 10 };
+    let both_float = Point { x: 1.0, y: 4.0 };
+    let integer_and_float = Point { x: 5, y: 4.0 };
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>In enum definitions</li>
+</ul>
+<blockquote>
+<p><pre>
+enum Result<T, E> {
+    Ok(T),
+    Err(E),
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>In method definition</li>
+</ul>
+<blockquote>
+<p><pre>
+struct Point<T> {
+    x: T,
+    y: T,
+}
+impl<T> Point<T> {
+    fn x(&amp;self) -&gt; &amp;T {
+        &amp;self.x
+    }
+}
+fn main() {
+    let p = Point { x: 5, y: 10 };
+    println!("p.x = {}", p.x());
+}
+</pre></p>
+</blockquote>
+<p>You could implement methods only on Point<f32></p>
+<blockquote>
+<p><pre>
+impl Point<f32> {
+    fn distance_from_origin(&amp;self) -&gt; f32 {
+        (self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>No performance cost using generics</li>
+</ul>
+<h1>Trait</h1>
+<ul>
+<li>
+<p>equivalent to a feature often called <em>interfaces</em> in other languages</p>
+</li>
+<li>
+<p>Defining a Trait</p>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+pub trait Summary {
+    fn summarize(&amp;self) -&gt; String;
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Implementing a Trait on a Type</li>
+</ul>
+<blockquote>
+<p><pre>
+pub struct NewsArticle {
+    pub headline: String,
+    pub location: String,
+    pub author: String,
+    pub content: String,
+}
+impl Summary for NewsArticle {
+    fn summarize(&amp;self) -&gt; String {
+        format!("{}, by {} ({})", self.headline, self.author, self.location)
+    }
+}
+pub struct Tweet {
+    pub username: String,
+    pub content: String,
+    pub reply: bool,
+    pub retweet: bool,
+}
+impl Summary for Tweet {
+    fn summarize(&amp;self) -&gt; String {
+        format!("{}: {}", self.username, self.content)
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Default Implementations</li>
+</ul>
+<blockquote>
+<p><pre>
+pub trait Summary {
+    fn summarize(&amp;self) -&gt; String {
+        String::from("(Read more...)")
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Traits as arguments</li>
+</ul>
+<blockquote>
+<p><pre>
+pub fn notify(item: impl Summary) {
+    println!("Breaking news! {}", item.summarize());
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Traits Bounds</li>
+</ul>
+<blockquote>
+<p><pre>
+pub fn notify<T: Summary>(item: T) {
+    println!("Breaking news! {}", item.summarize());
+}
+</pre></p>
+</blockquote>
+<p>This is only a shorter way to write from:</p>
+<blockquote>
+<p><pre>
+pub fn notify(item1: impl Summary, item2: impl Summary) {
+</pre></p>
+</blockquote>
+<p>to:</p>
+<blockquote>
+<p><pre>
+pub fn notify<T: Summary>(item1: T, item2: T) {
+</pre></p>
+</blockquote>
+<ul>
+<li>Specify multiple traits with <em>+</em></li>
+</ul>
+<blockquote>
+<p><pre>
+pub fn notify(item: impl Summary + Display) {
+</pre></p>
+</blockquote>
+<p>or</p>
+<blockquote>
+<p><pre>
+pub fn notify<T: Summary + Display>(item: T) {
+</pre></p>
+</blockquote>
+<ul>
+<li><em>where</em> clauses</li>
+</ul>
+<p>Instead of:</p>
+<blockquote>
+<p><pre>
+fn some_function<T: Display + Clone, U: Clone + Debug>(t: T, u: U) -&gt; i32 {
+</pre></p>
+</blockquote>
+<p>Do:</p>
+<blockquote>
+<p><pre>
+fn some_function<T, U>(t: T, u: U) -&gt; i32
+    where T: Display + Clone,
+          U: Clone + Debug
+{
+</pre></p>
+</blockquote>
+<ul>
+<li>Returning Traits</li>
+</ul>
+<blockquote>
+<p><pre>
+fn returns_summarizable() -&gt; impl Summary {
+    Tweet {
+        username: String::from("horse_ebooks"),
+        content: String::from("of course, as you probably already know, people"),
+        reply: false,
+        retweet: false,
+    }
+}
+</pre></p>
+</blockquote>
+<p>This will work ony if you have a single type that you're returning. (See §17 "Using Trait Objects that Allow for Values of Different Types")</p>
+<ul>
+<li>Fixing the <em>largest</em> function with Trait Bounds</li>
+</ul>
+<blockquote>
+<p><pre>
+fn largest<T: PartialOrd + Copy>(list: &amp;[T]) -&gt; T {
+    let mut largest = list[0];
+    for &amp;item in list.iter() {
+        if item &gt; largest {
+            largest = item;
+        }
+    }
+    largest
+}
+fn main() {
+    let number_list = vec![34, 50, 25, 100, 65];
+    let result = largest(&amp;number_list);
+    println!("The largest number is {}", result);
+    let char_list = vec!['y', 'm', 'a', 'q'];
+    let result = largest(&amp;char_list);
+    println!("The largest char is {}", result);
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Using Trait Bounds to Conditionally Implement Methods</li>
+</ul>
+<p>--&gt; implement only when implements all traits</p>
+<blockquote>
+<p><pre>
+use std::fmt::Display;
+struct Pair<T> {
+    x: T,
+    y: T,
+}
+impl<T> Pair<T> {
+    fn new(x: T, y: T) -&gt; Self {
+        Self {
+            x,
+            y,
+        }
+    }
+}
+impl<T: Display + PartialOrd> Pair<T> {
+    fn cmp_display(&amp;self) {
+        if self.x &gt;= self.y {
+            println!("The largest member is x = {}", self.x);
+        } else {
+            println!("The largest member is y = {}", self.y);
+        }
+    }
+}
+</pre></p>
+</blockquote>
+<p>--&gt; implement a trait for any type that implements another trait</p>
+<blockquote>
+<p><pre>
+impl<T: Display> ToString for T {
+    // --snip--
+}
+</pre></p>
+</blockquote>
+<h1>Validating References with Lifetimes</h1>
+<ul>
+<li>Every reference has a <em>lifetime</em>, which is the scope for which that reference is valid</li>
+<li>We must annotate lifetimes when the lifetimes of references could be related in a few different ways</li>
+<li>Rust requires us to annotate the relationships using generic lifetime parameters to ensure the actual references used at runtime will definitely be valid</li>
+<li>
+<p>See more advances lifetimes in §19</p>
+</li>
+<li>
+<p>Preventing Dangling References with lifetimes</p>
+</li>
+</ul>
+<p>Bad:</p>
+<blockquote>
+<p><pre>
+{
+    let r;                // ---------+-- 'a
+                          //          |
+    {                     //          |
+        let x = 5;        // -+-- 'b  |
+        r = &x;           //  |       |
+    }                     // -+       |
+                          //          |
+    println!("r: {}", r); //          |
+}                         // ---------+
+</pre></p>
+</blockquote>
+<p>OK:</p>
+<blockquote>
+<p><pre>
+{
+    let x = 5;            // ----------+-- 'b
+                          //           |
+    let r = &x;           // --+-- 'a  |
+                          //   |       |
+    println!("r: {}", r); //   |       |
+                          // --+       |
+}<br />
+</pre></p>
+</blockquote>
+<ul>
+<li>Generic lifetimes in functions</li>
+</ul>
+<blockquote>
+<p><pre>
+fn main() {
+    let string1 = String::from("abcd");
+    let string2 = "xyz";
+    let result = longest(string1.as_str(), string2);
+    println!("The longest string is {}", result);
+}
+fn longest(x: &amp;str, y: &amp;str) -&gt; &amp;str {
+    if x.len() &gt; y.len() {
+        x
+    } else {
+        y
+    }
+}
+</pre></p>
+</blockquote>
+<p>won't compile</p>
+<blockquote>
+<p><pre>
+error[E0106]: missing lifetime specifier
+= help: this function's return type contains a borrowed value, but the
+signature does not say whether it is borrowed from <code>x</code> or <code>y</code>
+</pre></p>
+</blockquote>
+<p>but we don't know either, because this is x or y, depending on the size</p>
+<ul>
+<li>Lifetime annotation syntax</li>
+</ul>
+<p>Names of lifetime parameters must start with an apostrophe, and are useallly all lowercase and very short, like generic types. most people use <em>'a</em>. lifetime parameter annotations placed after the <em>&amp;</em> of a reference, using a space to separate the annotation from the reference's type</p>
+<blockquote>
+<p><pre>
+&amp;i32        // a reference
+&amp;'a i32     // a reference with an explicit lifetime
+&amp;'a mut i32 // a mutable reference with an explicit lifetime
+</pre></p>
+</blockquote>
+<ul>
+<li>Lifetime annotation in function signatures</li>
+</ul>
+<p>The constraint we want to express in this signature is that all the references in the parameters and the return value must have the same lifetime. We’ll name the lifetime 'a and then add it to each reference</p>
+<blockquote>
+<p><pre>
+fn longest&lt;'a&gt;(x: &amp;'a str, y: &amp;'a str) -&gt; &amp;'a str {
+    if x.len() &gt; y.len() {
+        x
+    } else {
+        y
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Lifetime annotation in Struct definitions</li>
+</ul>
+<p>It’s possible for structs to hold references, but in that case we would need to add a lifetime annotation on every reference in the struct’s definition.</p>
+<blockquote>
+<p><pre>
+struct ImportantExcerpt&lt;'a&gt; {
+    part: &amp;'a str,
+}
+fn main() {
+    let novel = String::from("Call me Ishmael. Some years ago...");
+    let first_sentence = novel.split('.')
+        .next()
+        .expect("Could not find a '.'");
+    let i = ImportantExcerpt { part: first_sentence };
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Lifetime Elision</li>
+</ul>
+<p>rules to apply (for simplier code syntax). If there are still some param without lifetime, so explicit lifetime is needed</p>
+<pre><code>* rule1, each param that is a reference gets its own lifetime param
+
+* rule2, if there is exactly one input lifetime param, that lifetime is assigned to all output lifetime param
+
+* rule3, if there are multiple input lifetime param, but one of them is &amp;self or &amp;mut self because this is a method, the lifetime of seld is assigned to all output lifetime param
+</code></pre>
+<ul>
+<li>Lifetime annotation in method definitions</li>
+</ul>
+<blockquote>
+<p><pre>
+impl&lt;'a&gt; ImportantExcerpt&lt;'a&gt; {
+    fn level(&amp;self) -&gt; i32 {
+        3
+    }
+}
+</pre></p>
+<p><pre>
+impl&lt;'a&gt; ImportantExcerpt&lt;'a&gt; {
+    fn announce_and_return_part(&amp;self, announcement: &amp;str) -&gt; &amp;str {
+        println!("Attention please: {}", announcement);
+        self.part
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>static lifetime</li>
+</ul>
+<blockquote>
+<p><pre>
+let s: &amp;'static str = "I have a static lifetime.";
+</pre></p>
+</blockquote>
+<p>Which denotes the entire duration of the program. All string literals have the <em>'static</em> lifetime</p>
+<ul>
+<li>Generic type parameters, trait bounds, and lifetimes together</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::fmt::Display;
+fn longest_with_an_announcement&lt; 'a, T &gt; (x: &amp;'a str, y: &amp;'a str, ann: T) -&gt; &amp;'a str
+    where T: Display
+{
+    println!("Announcement! {}", ann);
+    if x.len() &gt; y.len() {
+        x
+    } else {
+        y
+    }
+}
+</pre></p>
+</blockquote>
+</div>
+
+<!--  sidebar -->
+<div class="w3-col l4">
+<!-- Langs -->
+
+
+
+
+
+<!-- Menu -->
+
+
+<nav class="site-nav">
+	<a href="#" class="menu-icon">
+		<svg viewBox="0 0 18 15">
+			<path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+			<path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+			<path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+		</svg>
+	</a>
+
+<div class="w3-card w3-margin menu-header">
+	<div class="w3-container w3-padding w3-light-grey">
+		<h4>Book</h4>
+	</div>
+	<div class="w3-container w3-white">
+	<p>
+	
+		<a href="../index.html">Book summary</a><br/>
+	
+		<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+	
+	</p>
+	</div>
+</div>
+
+<div class="trigger">
+
+<a href="../index.html">Book summary</a><br/>
+
+<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+
+</div>
+	</nav>
+
+
+
+
+
+<!-- Labels / tags -->
+
+
+
+</div>
+
+</div>
+
+</div>
+
+
+		<!-- Footer -->
+<footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top">
+  <p>Powered by <a href="http://yasifipo.net" target="_blank">yasifipo.net</a></p>
+</footer>
+	</body>
+</html>

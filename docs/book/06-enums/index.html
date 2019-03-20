@@ -1,0 +1,338 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<html>
+	<head>
+		<title>
+Enums
+</title>
+		
+
+		<link rel="stylesheet" href="../../static/css/cucumber.css">
+		<link rel="stylesheet" href="../../static/css/yasifipo.css">
+		<link rel="shortcut icon" href="../../static/favicon.ico">
+	</head>
+
+	<body class="w3-light-grey">
+		
+		
+
+
+
+
+<!-- Header -->
+<header class="w3-container w3-center w3-padding-32">
+  <h1><b>Enums</b></h1>
+</header>
+
+<!-- w3-content defines a container for fixed size centered content,
+and is wrapped around the whole page content, except for the footer -->
+<div class="w3-content" style="max-width:1400px">
+
+<!-- Grid -->
+<div class="w3-row">
+
+<div class="w3-col l8 s12">
+<h1>Defining an Enum</h1>
+<ul>
+<li>definition</li>
+</ul>
+<blockquote>
+<p><pre>
+enum IpAddrKind {
+    V4,
+    V6,
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>create instances</li>
+</ul>
+<blockquote>
+<p><pre>
+let four = IpAddrKind::V4;
+let six = IpAddrKind::V6;
+</pre></p>
+</blockquote>
+<ul>
+<li>Using as parameter</li>
+</ul>
+<blockquote>
+<p><pre>
+fn route(ip_type: IpAddrKind) { }
+route(IpAddrKind::V4);
+route(IpAddrKind::V6);
+</pre></p>
+</blockquote>
+<ul>
+<li>Data inside Enum variant</li>
+</ul>
+<blockquote>
+<p><pre>
+enum IpAddr {
+    V4(String),
+    V6(String),
+}
+let home = IpAddr::V4(String::from("127.0.0.1"));
+let loopback = IpAddr::V6(String::from("::1"));
+</pre></p>
+</blockquote>
+<ul>
+<li>Possibility to have different type inside each enum variant
+(this type can be structs too)</li>
+</ul>
+<blockquote>
+<p><pre>
+enum IpAddr {
+    V4(u8, u8, u8, u8),
+    V6(String),
+}
+let home = IpAddr::V4(127, 0, 0, 1);
+let loopback = IpAddr::V6(String::from("::1"));
+</pre></p>
+</blockquote>
+<ul>
+<li>We can implement methods for Enums</li>
+</ul>
+<blockquote>
+<p><pre>
+enum Message {
+    Quit,
+    Move { x: i32, y: i32 },
+    Write(String),
+    ChangeColor(i32, i32, i32),
+}
+impl Message {
+    fn call(&amp;self) {
+        // method body would be defined here
+    }
+}
+let m = Message::Write(String::from("hello"));
+m.call();
+</pre></p>
+</blockquote>
+<h1><strong>Option</strong> Enum</h1>
+<ul>
+<li>Defined in standard library</li>
+</ul>
+<blockquote>
+<p><pre>
+enum Option&lt; T &gt; {
+    Some(T),
+    None,
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>
+<p>Option&lt; T &gt; is defined in prelude, so don't need to bring it into scope explicitly, and variants <em>Some</em> and <em>None</em> can be used direclty without the <em>Option::</em> prefix</p>
+</li>
+<li>
+<p>Using it</p>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+et some_number = Some(5);
+let some_string = Some("a string");
+let absent_number: Option &lt; i32 &gt; = None;
+</pre></p>
+</blockquote>
+<h1><strong>Match</strong></h1>
+<ul>
+<li>Syntax</li>
+</ul>
+<blockquote>
+<p><pre>
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter,
+}
+fn value_in_cents(coin: Coin) -&gt; u32 {
+    match coin {
+        Coin::Penny =&gt; {
+            println!("Lucky penny!");
+            1
+        },
+        Coin::Nickel =&gt; 5,
+        Coin::Dime =&gt; 10,
+        Coin::Quarter =&gt; 25,
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Patterns that bind to values</li>
+</ul>
+<blockquote>
+<p><pre>#[derive(Debug)] // so we can inspect the state in a minute
+enum UsState {
+    Alabama,
+    Alaska,
+    // --snip--
+}
+enum Coin {
+    Penny,
+    Nickel,
+    Dime,
+    Quarter(UsState),
+}
+fn value_in_cents(coin: Coin) -&gt; u32 {
+    match coin {
+        Coin::Penny =&gt; 1,
+        Coin::Nickel =&gt; 5,
+        Coin::Dime =&gt; 10,
+        Coin::Quarter(state) =&gt; {
+            println!("State quarter from {:?}!", state);
+            25
+        },
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Matching with <em>Option&lt; T &gt;</em></li>
+</ul>
+<blockquote>
+<p><pre>
+fn plus_one(x: Option&lt; i32 &gt;) -&gt; Option&lt; i32 &gt; {
+    match x {
+        None =&gt; None,
+        Some(i) =&gt; Some(i + 1),
+    }
+}
+let five = Some(5);
+let six = plus_one(five);
+let none = plus_one(None);
+</pre></p>
+</blockquote>
+<ul>
+<li>
+<p>Be exhaustive</p>
+<ul>
+<li>We have to match all possible values of the Enum</li>
+<li>Using "_" placeholder for all remaining values</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+let some_u8_value = 0u8;
+match some_u8_value {
+    1 =&gt; println!("one"),
+    3 =&gt; println!("three"),
+    5 =&gt; println!("five"),
+    7 =&gt; println!("seven"),
+    _ =&gt; (),
+}
+</pre></p>
+</blockquote>
+<ul>
+<li><strong>If let</strong></li>
+</ul>
+<p>Replace this:</p>
+<blockquote>
+<p><pre>
+let some_u8_value = Some(0u8);
+match some_u8_value {
+    Some(3) =&gt; println!("three"),
+    _ =&gt; (),
+}
+</pre></p>
+</blockquote>
+<p>By this:</p>
+<blockquote>
+<p><pre>
+if let Some(3) = some_u8_value {
+    println!("three");
+}
+</pre></p>
+</blockquote>
+<p>We can use else too. Replace:</p>
+<blockquote>
+<p><pre>
+let mut count = 0;
+match coin {
+    Coin::Quarter(state) =&gt; println!("State quarter from {:?}!", state),
+    _ =&gt; count += 1,
+}
+</pre></p>
+</blockquote>
+<p>By:</p>
+<blockquote>
+<p><pre>
+let mut count = 0;
+if let Coin::Quarter(state) = coin {
+    println!("State quarter from {:?}!", state);
+} else {
+    count += 1;
+}
+</pre></p>
+</blockquote>
+</div>
+
+<!--  sidebar -->
+<div class="w3-col l4">
+<!-- Langs -->
+
+
+
+
+
+<!-- Menu -->
+
+
+<nav class="site-nav">
+	<a href="#" class="menu-icon">
+		<svg viewBox="0 0 18 15">
+			<path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+			<path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+			<path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+		</svg>
+	</a>
+
+<div class="w3-card w3-margin menu-header">
+	<div class="w3-container w3-padding w3-light-grey">
+		<h4>Book</h4>
+	</div>
+	<div class="w3-container w3-white">
+	<p>
+	
+		<a href="../index.html">Book summary</a><br/>
+	
+		<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+	
+	</p>
+	</div>
+</div>
+
+<div class="trigger">
+
+<a href="../index.html">Book summary</a><br/>
+
+<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+
+</div>
+	</nav>
+
+
+
+
+
+<!-- Labels / tags -->
+
+
+
+</div>
+
+</div>
+
+</div>
+
+
+		<!-- Footer -->
+<footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top">
+  <p>Powered by <a href="http://yasifipo.net" target="_blank">yasifipo.net</a></p>
+</footer>
+	</body>
+</html>

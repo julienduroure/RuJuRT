@@ -1,0 +1,344 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<html>
+	<head>
+		<title>
+Packages, Crates &amp; Modules
+</title>
+		
+
+		<link rel="stylesheet" href="../../static/css/cucumber.css">
+		<link rel="stylesheet" href="../../static/css/yasifipo.css">
+		<link rel="shortcut icon" href="../../static/favicon.ico">
+	</head>
+
+	<body class="w3-light-grey">
+		
+		
+
+
+
+
+<!-- Header -->
+<header class="w3-container w3-center w3-padding-32">
+  <h1><b>Packages, Crates &amp; Modules</b></h1>
+</header>
+
+<!-- w3-content defines a container for fixed size centered content,
+and is wrapped around the whole page content, except for the footer -->
+<div class="w3-content" style="max-width:1400px">
+
+<!-- Grid -->
+<div class="w3-row">
+
+<div class="w3-col l8 s12">
+<h1>Summary</h1>
+<ul>
+<li>A crate is a library or a binary</li>
+<li>The <em>create root</em> is a source file that is used to know how to build a crate</li>
+<li>A package has a <em>Cargo.toml</em> that describe how to build one or more crates. At most one crate in a package can be a library.</li>
+</ul>
+<h1>Package</h1>
+<ul>
+<li>
+<p>cargo new --&gt; This create a package</p>
+</li>
+<li>
+<p>If there is a <em>src</em> directory containing a <em>main.rs</em> in the same directory as a package's <em>Cargo.toml</em> --&gt; This is a binary crate with the same name as the package, and <em>src/main.rs</em> is the <em>crate root</em></p>
+</li>
+<li>
+<p>If there is a <em>src</em> directory containing a <em>lib.rs</em> in the same directory as a package's <em>Cargo.toml</em> --&gt; This is a library crate with the same name as the package, and <em>src/lib.rs</em> is the <em>crate root</em></p>
+</li>
+<li>
+<p>The crate root files are passed by Cargo to rustc to actually build the library or binary</p>
+</li>
+<li>
+<p>A package can contain zero or one library crates and as many binary crates as you’d like.</p>
+</li>
+<li>
+<p>There must be at least one crate (either a library or a binary) in a package.</p>
+</li>
+<li>
+<p>If a package contains both <em>src/main.rs</em> and <em>src/lib.rs</em>, then it has two crates: a library and a binary, both with the same name. If we only had one of the two, the package would have either a single library or binary crate.</p>
+</li>
+<li>
+<p>A package can have multiple binary crates by placing files in the <em>src/bin</em> directory: each file will be a separate binary crate</p>
+</li>
+</ul>
+<h1>Modules</h1>
+<p>We are going to talk about:</p>
+<ul>
+<li>Modules, a way to organize code and control the privacy of paths</li>
+<li>Paths, a way to name items</li>
+<li><em>use</em> keyword to bring a path into scope</li>
+<li><em>pub</em> to make items public</li>
+<li>Renaming items with <em>as</em></li>
+<li>Using external packages</li>
+<li>Nested paths to clean up large <em>use</em> lists</li>
+<li>Using the <em>glob</em> operator to bring everything in a module into scope</li>
+<li>How to split modules into individual files</li>
+</ul>
+<h2>modules</h2>
+<ul>
+<li>you can define function inside modules</li>
+<li>you can nest modules inside of other modules</li>
+<li>refer to an item in a module tree, you use its path</li>
+</ul>
+<h2>Paths</h2>
+<ul>
+<li>
+<p>A path can take two forms:</p>
+<ul>
+<li>an <em>absolute path</em> starts from a <em>crate root</em> by using a crate name or a literal crate</li>
+<li>a <em>relative path</em> starts from the current module and uses <em>self</em>, <em>super</em>, or an identifier in the current module</li>
+</ul>
+</li>
+<li>
+<p>Both absolute and relative paths are followed by one or more identifiers separated by <em>::</em></p>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+mod sound {
+    pub mod instrument {
+        pub fn clarinet() {
+            // Function body code goes here
+        }
+    }
+}
+fn main() {
+    // Absolute path
+    crate::sound::instrument::clarinet();
+    // Relative path
+    sound::instrument::clarinet();
+}
+</pre></p>
+</blockquote>
+<h2>Pub</h2>
+<ul>
+<li>make an item public, usable from outside the current module</li>
+<li>
+<p>making the module public does not make its contents public</p>
+</li>
+<li>
+<p>Use <em>super</em> to refer to parent (equivalent of .. in a filesystem)</p>
+</li>
+<li>
+<p>pub struct --&gt; Struct is public, but not fields.</p>
+</li>
+<li>
+<p>structs: Some fields can be publics, other privates</p>
+</li>
+<li>
+<p>When some fields of a struct are privates, the struct needs to provide a public associated function that constructs an instance of Vegetable (we’ve used the conventional name <em>new</em> here)</p>
+</li>
+<li>
+<p>If an Enum is public --&gt; all of its variants are public</p>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+mod menu {
+    pub enum Appetizer {
+        Soup,
+        Salad,
+    }
+}
+fn main() {
+    let order1 = menu::Appetizer::Soup;
+    let order2 = menu::Appetizer::Salad;
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>One more case where <em>pub</em> is used --&gt; See after, linked to <em>use</em> keyword</li>
+</ul>
+<h2>Use</h2>
+<ul>
+<li>Adding use and a path in a scope is similar to creating a symbolic link in the filesystem</li>
+</ul>
+<blockquote>
+<p><pre>
+mod sound {
+    pub mod instrument {
+        pub fn clarinet() {
+            // Function body code goes here
+        }
+    }
+}
+use self::sound::instrument;
+fn main() {
+    instrument::clarinet();
+    instrument::clarinet();
+    instrument::clarinet();
+}
+</pre></p>
+</blockquote>
+<p>Idiomatic:
+<em> for functions:
+    * specify the function’s parent module with <em>use</em>
+    * specify the parent module when calling the function
+</em> for structs, enums &amp; other items:
+    * specifying the full path to the item with <em>use</em>
+* Except when two items have same name</p>
+<h2>As</h2>
+<ul>
+<li>when 2 items have same name</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::fmt::Result;
+use std::io::Result as IoResult;
+fn function1() -&gt; Result {
+}
+fn function2() -&gt; IoResult&lt;()&gt; {
+}
+</pre></p>
+</blockquote>
+<h2>Re-exporting names with <em>pub use</em></h2>
+<ul>
+<li>bringing an item into scope</li>
+<li>but also making that item available for others to bring into their scope</li>
+</ul>
+<blockquote>
+<p><pre>
+mod sound {
+    pub mod instrument {
+        pub fn clarinet() {
+            // Function body code goes here
+        }
+    }
+}
+mod performance_group {
+    pub use crate::sound::instrument;
+    pub fn clarinet_trio() {
+        instrument::clarinet();
+        instrument::clarinet();
+        instrument::clarinet();
+    }
+}
+fn main() {
+    performance_group::clarinet_trio();
+    performance_group::instrument::clarinet();
+}
+</pre></p>
+</blockquote>
+<h2>Using external packages</h2>
+<ul>
+<li>Need to be listed in <em>Cargo.toml</em></li>
+<li>Except <em>std</em> that is shipped with rust</li>
+<li>std:  an absolute path starting with <em>std</em>, the name of the standard library crate</li>
+</ul>
+<h2>Nested Paths for Cleaning Up Large <em>use</em> Lists</h2>
+<ul>
+<li>Instead of:</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::cmp::Ordering;
+use std::io;
+</pre></p>
+</blockquote>
+<ul>
+<li>Use:</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::{cmp::Ordering, io};
+</pre></p>
+</blockquote>
+<ul>
+<li>Instead of:</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::io;
+use std::io::Write;
+</pre></p>
+</blockquote>
+<ul>
+<li>Use:</li>
+</ul>
+<blockquote>
+<p><pre>
+use std::io::{self, Write};
+</pre></p>
+</blockquote>
+<h2>Glob operator</h2>
+<blockquote>
+<p><pre>
+use std::collections::*;
+</pre></p>
+</blockquote>
+<h2>Separating Modules into Different Files</h2>
+<ul>
+<li>use same name file / module</li>
+<li>launch content of a module using <em>use module_name;</em></li>
+<li>use directory when using <em>use module_name</em> in a module file</li>
+</ul>
+</div>
+
+<!--  sidebar -->
+<div class="w3-col l4">
+<!-- Langs -->
+
+
+
+
+
+<!-- Menu -->
+
+
+<nav class="site-nav">
+	<a href="#" class="menu-icon">
+		<svg viewBox="0 0 18 15">
+			<path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+			<path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+			<path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+		</svg>
+	</a>
+
+<div class="w3-card w3-margin menu-header">
+	<div class="w3-container w3-padding w3-light-grey">
+		<h4>Book</h4>
+	</div>
+	<div class="w3-container w3-white">
+	<p>
+	
+		<a href="../index.html">Book summary</a><br/>
+	
+		<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+	
+	</p>
+	</div>
+</div>
+
+<div class="trigger">
+
+<a href="../index.html">Book summary</a><br/>
+
+<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+
+</div>
+	</nav>
+
+
+
+
+
+<!-- Labels / tags -->
+
+
+
+</div>
+
+</div>
+
+</div>
+
+
+		<!-- Footer -->
+<footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top">
+  <p>Powered by <a href="http://yasifipo.net" target="_blank">yasifipo.net</a></p>
+</footer>
+	</body>
+</html>

@@ -1,0 +1,340 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<html>
+	<head>
+		<title>
+Testing
+</title>
+		
+
+		<link rel="stylesheet" href="../../static/css/cucumber.css">
+		<link rel="stylesheet" href="../../static/css/yasifipo.css">
+		<link rel="shortcut icon" href="../../static/favicon.ico">
+	</head>
+
+	<body class="w3-light-grey">
+		
+		
+
+
+
+
+<!-- Header -->
+<header class="w3-container w3-center w3-padding-32">
+  <h1><b>Testing</b></h1>
+</header>
+
+<!-- w3-content defines a container for fixed size centered content,
+and is wrapped around the whole page content, except for the footer -->
+<div class="w3-content" style="max-width:1400px">
+
+<!-- Grid -->
+<div class="w3-row">
+
+<div class="w3-col l8 s12">
+<h1>Writing tests</h1>
+<ul>
+<li>a test is a function that's annotated with the <em>test</em> attribute</li>
+<li>Add <em>#[test]</em> on the line before <em>fn</em></li>
+<li>Run your tests with the <em>cargo test</em> command</li>
+<li>A test failed if panic!</li>
+</ul>
+<blockquote>
+<pre>
+
+</blockquote>
+<h1>[cfg(test)]</h1>
+<p>mod tests {
+    #[test]
+    fn exploration() {
+        assert_eq!(2 + 2, 4);
+    }
+    #[test]
+    fn another() {
+        panic!("Make this test fail");
+    }
+}
+</pre></p>
+<ul>
+<li>Checking Results with <em>assert!</em> (will panic if condition is False)</li>
+</ul>
+<blockquote>
+<pre>
+
+</blockquote>
+<h1>[derive(Debug)]</h1>
+<p>pub struct Rectangle {
+    length: u32,
+    width: u32,
+}
+impl Rectangle {
+    pub fn can_hold(&amp;self, other: &amp;Rectangle) -&gt; bool {
+        self.length &gt; other.length &amp;&amp; self.width &gt; other.width
+    }
+}
+</pre></p>
+<blockquote>
+<pre>
+
+</blockquote>
+<h1>[cfg(test)]</h1>
+<p>mod tests {
+    use super::*;
+    #[test]
+    fn larger_can_hold_smaller() {
+        let larger = Rectangle { length: 8, width: 7 };
+        let smaller = Rectangle { length: 5, width: 1 };
+        assert!(larger.can_hold(&amp;smaller));
+    }
+}
+</pre></p>
+<ul>
+<li>
+<p>Some macro:</p>
+<ul>
+<li>assert_eq!</li>
+<li>assert_ne!</li>
+</ul>
+</li>
+<li>
+<p>For struct &amp; enums --&gt; need to implement <em>PartialEq</em> and <em>Debug</em></p>
+</li>
+<li>
+<p>Tip --&gt; this is usually as straightforward as adding the <em>#[derive(PartialEq, Debug)]</em> annotation to your struct or enum definition</p>
+</li>
+<li>
+<p>Adding custom failure messages</p>
+</li>
+</ul>
+<blockquote>
+<pre>
+
+</blockquote>
+<h1>[test]</h1>
+<p>fn greeting_contains_name() {
+    let result = greeting("Carol");
+    assert!(
+        result.contains("Carol"),
+        "Greeting did not contain name, value was <code>{}</code>", result
+    );
+}
+</pre></p>
+<ul>
+<li>Checking for panics with <em>should_panic</em></li>
+</ul>
+<blockquote>
+<p><pre>
+pub struct Guess {
+    value: i32,
+}
+impl Guess {
+    pub fn new(value: i32) -&gt; Guess {
+        if value &lt; 1 || value &gt; 100 {
+            panic!("Guess value must be between 1 and 100, got {}.", value);
+        }
+        Guess {
+            value
+        }
+    }
+}</p>
+</blockquote>
+<h1>[cfg(test)]</h1>
+<p>mod tests {
+    use super::*;
+    #[test]
+    #[should_panic]
+    fn greater_than_100() {
+        Guess::new(200);
+    }
+}</p>
+<h1>[cfg(test)]</h1>
+<p>mod tests {
+    use super::*;
+    #[test]
+    #[should_panic(expected = "Guess value must be less than or equal to 100")]
+    fn greater_than_100() {
+        Guess::new(200);
+    }
+}
+</pre></p>
+<ul>
+<li>Using <em>Result&lt; T, E &gt;</em> in tests</li>
+</ul>
+<blockquote>
+<pre>
+
+</blockquote>
+<h1>[cfg(test)]</h1>
+<p>mod tests {
+    #[test]
+    fn it_works() -&gt; Result&lt;(), String&gt; {
+        if 2 + 2 == 4 {
+            Ok(())
+        } else {
+            Err(String::from("two plus two does not equal four"))
+        }
+    }
+}
+</pre></p>
+<h1>Running tests</h1>
+<ul>
+<li>cargo test</li>
+<li>
+<p>If want to pass arguments to your program, separate with <em>--</em>:</p>
+<ul>
+<li>cargo test --help displayes options of test</li>
+<li>cargo test -- --help displays the options of your programs</li>
+</ul>
+</li>
+<li>
+<p>Running tests in parallel or Consecutively</p>
+</li>
+</ul>
+<p>By default, they run in parallel using threads
+If you don't want: cargo test -- --test-threads=1</p>
+<ul>
+<li>Showing function output</li>
+</ul>
+<p>cargo test -- --nocapture</p>
+<ul>
+<li>Running a subset of tests by name</li>
+</ul>
+<p>cargo test test_name</p>
+<ul>
+<li>Filtering to run multiple tests</li>
+</ul>
+<p>you can specify part of a test name, any test whose name matches that value will be run</p>
+<ul>
+<li>Ignoring some tests unless specifically requested</li>
+</ul>
+<blockquote>
+<pre>
+
+</blockquote>
+<h1>[test]</h1>
+<p>fn it_works() {
+    assert_eq!(2 + 2, 4);
+}</p>
+<h1>[test]</h1>
+<h1>[ignore]</h1>
+<p>fn expensive_test() {
+    // code that takes an hour to run
+}
+</pre></p>
+<p>run only ignore tests: cargo test -- --ignored</p>
+<h1>Test organization</h1>
+<p>2 kinds of tests:
+    * unit tests
+    * integration tests</p>
+<h2>Unit tests</h2>
+<ul>
+<li>
+<p>Convention is to create a modules names tests in each file to contain the test functions and to annotate the module with cfg(test)</p>
+</li>
+<li>
+<p>Testing private function: This is possible</p>
+</li>
+</ul>
+<h2>Integration tests</h2>
+<ul>
+<li>Need a tests directory, next to src</li>
+<li>Cargo will compile each of the files in tests dir as an individual crate</li>
+</ul>
+<blockquote>
+<p><pre>
+use adder;</p>
+</blockquote>
+<h1>[test]</h1>
+<p>fn it_adds_two() {
+    assert_eq!(4, adder::add_two(2));
+}
+</pre></p>
+<ul>
+<li>submodule in integration tests</li>
+</ul>
+<p>To create a submodule not seen as integration test file:
+    * create tests/common/mod.rs
+    * call this module from other integration test file</p>
+<blockquote>
+<p><pre>
+use adder;
+mod common;</p>
+</blockquote>
+<h1>[test]</h1>
+<p>fn it_adds_two() {
+    common::setup();
+    assert_eq!(4, adder::add_two(2));
+}
+</pre></p>
+<ul>
+<li>Integration tests for binary crates</li>
+</ul>
+<p>You can't create integration tests.
+Tip:</p>
+<p>This is one of the reasons Rust projects that provide a binary have a straightforward src/main.rs file that calls logic that lives in the src/lib.rs file. Using that structure, integration tests can test the library crate with use to make the important functionality available. If the important functionality works, the small amount of code in the src/main.rs file will work as well, and that small amount of code doesn’t need to be tested.</p>
+</div>
+
+<!--  sidebar -->
+<div class="w3-col l4">
+<!-- Langs -->
+
+
+
+
+
+<!-- Menu -->
+
+
+<nav class="site-nav">
+	<a href="#" class="menu-icon">
+		<svg viewBox="0 0 18 15">
+			<path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+			<path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+			<path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+		</svg>
+	</a>
+
+<div class="w3-card w3-margin menu-header">
+	<div class="w3-container w3-padding w3-light-grey">
+		<h4>Book</h4>
+	</div>
+	<div class="w3-container w3-white">
+	<p>
+	
+		<a href="../index.html">Book summary</a><br/>
+	
+		<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+	
+	</p>
+	</div>
+</div>
+
+<div class="trigger">
+
+<a href="../index.html">Book summary</a><br/>
+
+<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+
+</div>
+	</nav>
+
+
+
+
+
+<!-- Labels / tags -->
+
+
+
+</div>
+
+</div>
+
+</div>
+
+
+		<!-- Footer -->
+<footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top">
+  <p>Powered by <a href="http://yasifipo.net" target="_blank">yasifipo.net</a></p>
+</footer>
+	</body>
+</html>

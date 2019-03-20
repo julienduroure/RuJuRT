@@ -1,0 +1,287 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<html>
+	<head>
+		<title>
+Using structs
+</title>
+		
+
+		<link rel="stylesheet" href="../../static/css/cucumber.css">
+		<link rel="stylesheet" href="../../static/css/yasifipo.css">
+		<link rel="shortcut icon" href="../../static/favicon.ico">
+	</head>
+
+	<body class="w3-light-grey">
+		
+		
+
+
+
+
+<!-- Header -->
+<header class="w3-container w3-center w3-padding-32">
+  <h1><b>Using structs</b></h1>
+</header>
+
+<!-- w3-content defines a container for fixed size centered content,
+and is wrapped around the whole page content, except for the footer -->
+<div class="w3-content" style="max-width:1400px">
+
+<!-- Grid -->
+<div class="w3-row">
+
+<div class="w3-col l8 s12">
+<h1>Defining &amp; Instantiating Structs</h1>
+<ul>
+<li>Similar to tuples, but you name each piece of data. Definition:</li>
+</ul>
+<blockquote>
+<p><pre>
+struct User {
+    username: String,
+    email: String,
+    sign_in_count: u64,
+    active: bool,
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Instanciate:</li>
+</ul>
+<blockquote>
+<p><pre>
+let user1 = User {
+    email: String::from("someone@example.com"),
+    username: String::from("someusername123"),
+    active: true,
+    sign_in_count: 1,
+};
+</pre></p>
+</blockquote>
+<ul>
+<li>Access / Modify</li>
+<li>Entire instance must be mutable</li>
+</ul>
+<blockquote>
+<p><pre>
+let user1 = User {
+    email: String::from("someone@example.com"),
+    username: String::from("someusername123"),
+    active: true,
+    sign_in_count: 1,
+};</p>
+<p>user1.email = String::from("antoheremail@example.com");
+</pre></p>
+</blockquote>
+<ul>
+<li>Like any expression, we can construct an instance as last expression in a function --&gt; this will return that new instance</li>
+<li>Can use special syntax if field has same name that parameter</li>
+</ul>
+<blockquote>
+<p><pre>
+fn build_user(email: String, username: String) -&gt; User {
+    User {
+        email,
+        username,
+        active: true,
+        sign_in_count: 1,
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Creating instances from other instances : syntax <strong>..</strong>
+The syntax <strong>..</strong> specifies that the remaining fields not explicitly set should have the same value as the fields in the given instance</li>
+</ul>
+<blockquote>
+<p><pre>
+let user2 = User {
+    email: String::from("another@example.com"),
+    username: String::from("anotherusername567"),
+    ..user1
+};
+</pre></p>
+</blockquote>
+<ul>
+<li>Using tuple stucts without named fields to create different types</li>
+</ul>
+<blockquote>
+<p><pre>
+struct Color(i32, i32, i32);
+struct Point(i32, i32, i32);</p>
+<p>let black = Color(0, 0, 0);
+let origin = Point(0, 0, 0);
+</pre></p>
+</blockquote>
+<ul>
+<li>
+<p>Unit-like structs: without any field<br />
+Have similarity to <em>()</em>, the unit type<br />
+Can be useful if you need to implement a trait on some type but don't have any data that you want to store in the type itself (see §10)</p>
+</li>
+<li>
+<p>Ownership of struct data</p>
+</li>
+</ul>
+<p>It's possible for structs to store references to data owned by something else, but to do so requires the use of <em>lifetimes</em> (see §10).</p>
+<h1>Example program using Structs</h1>
+<ul>
+<li>
+<p>See example rs file</p>
+</li>
+<li>
+<p>How to print debugging content of struct</p>
+</li>
+</ul>
+<p>Using annotation:</p>
+<blockquote>
+<p><pre>#[derive(Debug)]<br />
+struct Rectangle {
+    width: u32,
+    height: u32,
+}</p>
+<p>fn main() {
+    let rect1 = Rectangle { width: 30, height: 50 };</p>
+<p>println!("rect1 is {:?}", rect1);
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Use <strong>{:?}</strong> to display on 1 line, or <strong>{:#?}</strong> to display on multiple lines:</li>
+</ul>
+<blockquote>
+<p><pre>
+rect1 is Rectangle {
+    width: 30,
+    height: 50
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>See Appendic C for traits and their behaviors</li>
+<li>See §10 for custom behavior, and how to create own traits</li>
+</ul>
+<h1>Method syntax</h1>
+<ul>
+<li>Using <strong>impl</strong></li>
+</ul>
+<blockquote>
+<p><pre>#[derive(Debug)]
+struct Rectangle {
+    width: u32,
+    height: u32,
+}
+impl Rectangle {
+    fn area(&amp;self) -&gt; u32 {
+        self.width * self.height
+    }
+}
+fn main() {
+    let rect1 = Rectangle { width: 30, height: 50 };
+    println!(
+        "The area of the rectangle is {} square pixels.",
+        rect1.area()
+    );
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Multiple parameters</li>
+</ul>
+<blockquote>
+<p><pre>
+impl Rectangle {
+    fn area(&amp;self) -&gt; u32 {
+        self.width * self.height
+    }
+    fn can_hold(&amp;self, other: &amp;Rectangle) -&gt; bool {
+        self.width &gt; other.width &amp;&amp; self.height &gt; other.height
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Associated functions</li>
+</ul>
+<p>If a function don't take self --&gt; Equivalent of Class method, not instance method.
+Can be used as constructor</p>
+<blockquote>
+<p><pre>
+impl Rectangle {
+    fn square(size: u32) -&gt; Rectangle {
+        Rectangle { width: size, height: size }
+    }
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Multiple <strong>impl</strong> blocks
+It's valid to have multiple <strong>impl</strong> blocks. No reason to separate, but can be useful (see §10 : generic types &amp; traits)</li>
+</ul>
+</div>
+
+<!--  sidebar -->
+<div class="w3-col l4">
+<!-- Langs -->
+
+
+
+
+
+<!-- Menu -->
+
+
+<nav class="site-nav">
+	<a href="#" class="menu-icon">
+		<svg viewBox="0 0 18 15">
+			<path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+			<path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+			<path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+		</svg>
+	</a>
+
+<div class="w3-card w3-margin menu-header">
+	<div class="w3-container w3-padding w3-light-grey">
+		<h4>Book</h4>
+	</div>
+	<div class="w3-container w3-white">
+	<p>
+	
+		<a href="../index.html">Book summary</a><br/>
+	
+		<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+	
+	</p>
+	</div>
+</div>
+
+<div class="trigger">
+
+<a href="../index.html">Book summary</a><br/>
+
+<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+
+</div>
+	</nav>
+
+
+
+
+
+<!-- Labels / tags -->
+
+
+
+</div>
+
+</div>
+
+</div>
+
+
+		<!-- Footer -->
+<footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top">
+  <p>Powered by <a href="http://yasifipo.net" target="_blank">yasifipo.net</a></p>
+</footer>
+	</body>
+</html>
