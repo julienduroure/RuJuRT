@@ -1,0 +1,407 @@
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<html>
+	<head>
+		<title>
+Iterators and closures
+</title>
+		
+
+		<link rel="stylesheet" href="../../static/css/cucumber.css">
+		<link rel="stylesheet" href="../../static/css/yasifipo.css">
+		<link rel="shortcut icon" href="../../static/favicon.ico">
+	</head>
+
+	<body class="w3-light-grey">
+		
+		
+
+
+
+
+<!-- Header -->
+<header class="w3-container w3-center w3-padding-32">
+  <h1><b>Iterators and closures</b></h1>
+</header>
+
+<!-- w3-content defines a container for fixed size centered content,
+and is wrapped around the whole page content, except for the footer -->
+<div class="w3-content" style="max-width:1400px">
+
+<!-- Grid -->
+<div class="w3-row">
+
+<div class="w3-col l8 s12">
+<h1>Closures</h1>
+<ul>
+<li>Anonymous functions that can capture their environment</li>
+<li>Can be save in a variable or pass as arguments to other functions</li>
+<li>You can create the closure in one place, and then call the closure to evaluate it in a different context</li>
+<li>Can capture values from the scope in which they're defined</li>
+</ul>
+<h2>Creating an abstraction of behavior with closures</h2>
+<blockquote>
+<p><pre>
+fn generate_workout(intensity: u32, random_number: u32) {
+    let expensive_closure = |num| {
+        println!("calculating slowly...");
+        thread::sleep(Duration::from_secs(2));
+        num
+    };
+    if intensity &lt; 25 {
+        println!(
+            "Today, do {} pushups!",
+            expensive_closure(intensity)
+        );
+        println!(
+            "Next, do {} situps!",
+            expensive_closure(intensity)
+        );
+    } else {
+        if random_number == 3 {
+            println!("Take a break today! Remember to stay hydrated!");
+        } else {
+            println!(
+                "Today, run for {} minutes!",
+                expensive_closure(intensity)
+            );
+        }
+    }
+}
+</pre></p>
+</blockquote>
+<h2>Closure type inference and annotation</h2>
+<blockquote>
+<p><pre>
+fn  add_one_v1   (x: u32) -&gt; u32 { x + 1 }
+let add_one_v2 = |x: u32| -&gt; u32 { x + 1 };
+let add_one_v3 = |x|             { x + 1 };
+let add_one_v4 = |x|               x + 1  ;
+</pre></p>
+</blockquote>
+<ul>
+<li>Type of param must be the same for each call (and defined with the first call)</li>
+</ul>
+<h2>Storing closures using generic parameters and the <em>Fn</em> traits</h2>
+<ul>
+<li>All closures implement at least one of the traits:<ul>
+<li>Fn</li>
+<li>FnMut</li>
+<li>FnOnce</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<p><pre>
+struct Cacher<T>
+    where T: Fn(u32) -&gt; u32
+{
+    calculation: T,
+    value: Option<u32>,
+}
+</pre></p>
+</blockquote>
+<ul>
+<li>Cache system</li>
+</ul>
+<blockquote>
+<p><pre>
+impl<T> Cacher<T>
+    where T: Fn(u32) -&gt; u32
+{
+    fn new(calculation: T) -&gt; Cacher<T> {
+        Cacher {
+            calculation,
+            value: None,
+        }
+    }
+    fn value(&amp;mut self, arg: u32) -&gt; u32 {
+        match self.value {
+            Some(v) =&gt; v,
+            None =&gt; {
+                let v = (self.calculation)(arg);
+                self.value = Some(v);
+                v
+            },
+        }
+    }
+}
+</pre></p>
+</blockquote>
+<p>and the following call</p>
+<blockquote>
+<p><pre>
+fn generate_workout(intensity: u32, random_number: u32) {
+    let mut expensive_result = Cacher::new(|num| {
+        println!("calculating slowly...");
+        thread::sleep(Duration::from_secs(2));
+        num
+    });
+    if intensity &lt; 25 {
+        println!(
+            "Today, do {} pushups!",
+            expensive_result.value(intensity)
+        );
+        println!(
+            "Next, do {} situps!",
+            expensive_result.value(intensity)
+        );
+    } else {
+        if random_number == 3 {
+            println!("Take a break today! Remember to stay hydrated!");
+        } else {
+            println!(
+                "Today, run for {} minutes!",
+                expensive_result.value(intensity)
+            );
+        }
+    }
+}
+</pre></p>
+</blockquote>
+<h2>Limitation of the Cacher implementation</h2>
+<ul>
+<li>currently suppose that we call always with the same value.</li>
+<li>hold a hashmap rather a single value ?</li>
+</ul>
+<h2>Capturing the environment with closures</h2>
+<blockquote>
+<p><pre>
+fn main() {
+    let x = 4;
+    let equal_to_x = |z| z == x;
+    let y = 4;
+    assert!(equal_to_x(y));
+}
+</pre></p>
+</blockquote>
+<p>Traits:</p>
+<ul>
+<li><em>FnOnce</em> consumes the variables it captures</li>
+<li><em>FnMut</em> can change the environment because it mutably borrows values</li>
+<li>
+<p><em>Fn</em> borrows values from the environment immutably</p>
+</li>
+<li>
+<p>If you want to force the closure to take ownership of the values, it uses in the env, you can use the <em>move</em> keyword before the parameter list</p>
+</li>
+</ul>
+<p>Not working:</p>
+<blockquote>
+<p><pre>
+fn main() {
+    let x = vec![1, 2, 3];
+    let equal_to_x = move |z| z == x;
+    println!("can't use x here: {:?}", x);
+    let y = vec![1, 2, 3];
+    assert!(equal_to_x(y));
+}
+</pre></p>
+</blockquote>
+<h1>Iterators</h1>
+<blockquote>
+<p><pre>
+let v1 = vec![1, 2, 3];
+let v1_iter = v1.iter();
+for val in v1_iter {
+    println!("Got: {}", val);
+}
+</pre></p>
+</blockquote>
+<h2>The <em>Iterator</em> Trait and the <em>next</em> Method</h2>
+<p>All iterators implement a trait named <em>Iterator</em>, defined in the standard library. Def of the trait looks like this:<br />
+(type Item is an associated type with this trait)</p>
+<blockquote>
+<p><pre>
+trait Iterator {
+    type Item;
+    fn next(&amp;mut self) -&gt; Option<Self::Item>;
+    // methods with default implementations elided
+}
+</pre></p>
+</blockquote>
+<h2>Methods that consume the iterator</h2>
+<p>methods that call <em>next</em> are called <em>consuming adaptors</em>, because calling them uses up the iterator. Example: sum() method</p>
+<blockquote>
+<p><pre>
+ #[test]
+fn iterator_sum() {
+    let v1 = vec![1, 2, 3];
+    let v1_iter = v1.iter();
+    let total: i32 = v1_iter.sum();
+    assert_eq!(total, 6);
+}
+</pre></p>
+</blockquote>
+<h2>methods that produce other iterators</h2>
+<p>Other methods on <em>Iterator</em> trait -&gt; <em>iterator adaptors</em>, allow you to change iterators into different kinds of iterators.</p>
+<p>Will generate an error:</p>
+<blockquote>
+<p><pre>
+let v1: Vec<i32> = vec![1, 2, 3];
+v1.iter().map(|x| x + 1);
+</pre></p>
+<p><pre>
+warning: unused <code>std::iter::Map</code> which must be used: iterator adaptors are lazy
+and do nothing unless consumed
+</pre></p>
+</blockquote>
+<p>Fixed:</p>
+<blockquote>
+<p><pre>
+let v1: Vec<i32> = vec![1, 2, 3];
+let v2: Vec&lt;_&gt; = v1.iter().map(|x| x + 1).collect();
+assert_eq!(v2, vec![2, 3, 4]);
+</pre></p>
+</blockquote>
+<h2>Using closures that capture their environment</h2>
+<p>Can be used with <em>filter</em> iterator adaptor</p>
+<blockquote>
+<p><pre>
+ #[derive(PartialEq, Debug)]
+struct Shoe {
+    size: u32,
+    style: String,
+}
+fn shoes_in_my_size(shoes: Vec<Shoe>, shoe_size: u32) -&gt; Vec<Shoe> {
+    shoes.into_iter()
+        .filter(|s| s.size == shoe_size)
+        .collect()
+}</p>
+</blockquote>
+<h1>[test]</h1>
+<p>fn filters_by_size() {
+    let shoes = vec![
+        Shoe { size: 10, style: String::from("sneaker") },
+        Shoe { size: 13, style: String::from("sandal") },
+        Shoe { size: 10, style: String::from("boot") },
+    ];
+    let in_my_size = shoes_in_my_size(shoes, 10);
+    assert_eq!(
+        in_my_size,
+        vec![
+            Shoe { size: 10, style: String::from("sneaker") },
+            Shoe { size: 10, style: String::from("boot") },
+        ]
+    );
+}
+</pre></p>
+<h2>Creating our own iterators with the <em>Iterator</em> Trait</h2>
+<blockquote>
+<p></pre>
+struct Counter {
+    count: u32,
+}
+impl Counter {
+    fn new() -&gt; Counter {
+        Counter { count: 0 }
+    }
+}
+//
+impl Iterator for Counter {
+    type Item = u32;
+    fn next(&amp;mut self) -&gt; Option<Self::Item> {
+        self.count += 1;
+        if self.count &lt; 6 {
+            Some(self.count)
+        } else {
+            None
+        }
+    }
+}
+</pre></p>
+</blockquote>
+<p>Using it:</p>
+<blockquote>
+<p><pre>
+ #[test]
+fn calling_next_directly() {
+    let mut counter = Counter::new();
+    assert_eq!(counter.next(), Some(1));
+    assert_eq!(counter.next(), Some(2));
+    assert_eq!(counter.next(), Some(3));
+    assert_eq!(counter.next(), Some(4));
+    assert_eq!(counter.next(), Some(5));
+    assert_eq!(counter.next(), None);
+}
+</pre></p>
+</blockquote>
+<h2>Using Other <em>Iterator</em> Trait Methods</h2>
+<blockquote>
+<p><pre>
+ #[test]
+fn using_other_iterator_trait_methods() {
+    let sum: u32 = Counter::new().zip(Counter::new().skip(1))
+                                 .map(|(a, b)| a * b)
+                                 .filter(|x| x % 3 == 0)
+                                 .sum();
+    assert_eq!(18, sum);
+}
+</pre></p>
+</blockquote>
+</div>
+
+<!--  sidebar -->
+<div class="w3-col l4">
+<!-- Langs -->
+
+
+
+
+
+<!-- Menu -->
+
+
+<nav class="site-nav">
+	<a href="#" class="menu-icon">
+		<svg viewBox="0 0 18 15">
+			<path fill="#424242" d="M18,1.484c0,0.82-0.665,1.484-1.484,1.484H1.484C0.665,2.969,0,2.304,0,1.484l0,0C0,0.665,0.665,0,1.484,0 h15.031C17.335,0,18,0.665,18,1.484L18,1.484z"/>
+			<path fill="#424242" d="M18,7.516C18,8.335,17.335,9,16.516,9H1.484C0.665,9,0,8.335,0,7.516l0,0c0-0.82,0.665-1.484,1.484-1.484 h15.031C17.335,6.031,18,6.696,18,7.516L18,7.516z"/>
+			<path fill="#424242" d="M18,13.516C18,14.335,17.335,15,16.516,15H1.484C0.665,15,0,14.335,0,13.516l0,0 c0-0.82,0.665-1.484,1.484-1.484h15.031C17.335,12.031,18,12.696,18,13.516L18,13.516z"/>
+		</svg>
+	</a>
+
+<div class="w3-card w3-margin menu-header">
+	<div class="w3-container w3-padding w3-light-grey">
+		<h4>Book</h4>
+	</div>
+	<div class="w3-container w3-white">
+	<p>
+	
+		<a href="../index.html">Book summary</a><br/>
+	
+		<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+	
+	</p>
+	</div>
+</div>
+
+<div class="trigger">
+
+<a href="../index.html">Book summary</a><br/>
+
+<a href="https://github.com/julienduroure/RuJuRT/tree/master/learning/book/">Code repo</a><br/>
+
+</div>
+	</nav>
+
+
+
+
+
+<!-- Labels / tags -->
+
+
+
+</div>
+
+</div>
+
+</div>
+
+
+		<!-- Footer -->
+<footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top">
+  <p>Powered by <a href="http://yasifipo.net" target="_blank">yasifipo.net</a></p>
+</footer>
+	</body>
+</html>
